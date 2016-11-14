@@ -1,3 +1,5 @@
+**DEPRECATED.** We're now part of the restless_ team, so development will continue there.
+
 ========
 restkiss
 ========
@@ -50,7 +52,7 @@ Things that will never be added to the core library - but plugins are encouraged
 Why?
 ====
 
-Creator [@toastdriven](http://github.com/toastdriven) had a very specific goal when building the original
+Creator `@toastdriven <http://github.com/toastdriven>`_ had a very specific goal when building the original
 restless_, and our goal is to respect it. Here it follows: 
 
 > Quite simply, I care about creating flexible & RESTful APIs. In building

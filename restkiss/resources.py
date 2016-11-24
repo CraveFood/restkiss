@@ -1,9 +1,9 @@
-import six
 import sys
 
 from .constants import OK, CREATED, ACCEPTED, NO_CONTENT
 from .data import Data
-from .exceptions import MethodNotImplemented, Unauthorized
+from .exceptions import MethodNotImplemented, Unauthorized, BadRequest
+from .paginator import Paginator
 from .preparers import Preparer
 from .serializers import JSONSerializer
 from .utils import format_traceback
@@ -268,7 +268,7 @@ class Resource(object):
         try:
             # Use ``.get()`` so we can also dodge potentially incorrect
             # ``endpoint`` errors as well.
-            if not method in self.http_methods.get(endpoint, {}):
+            if method not in self.http_methods.get(endpoint, {}):
                 raise MethodNotImplemented(
                     "Unsupported method '{0}' for {1} endpoint.".format(
                         method,
@@ -385,7 +385,23 @@ class Resource(object):
             return self.serialize_list(data)
         return self.serialize_detail(data)
 
+    def paginate_data(self, data):
+        page_size = getattr(self, 'page_size', 20)
+        paginator = Paginator(data, page_size)
+
+        try:
+            page_number = int(self.request.GET.get('p', 1))
+        except ValueError:
+            page_number = None
+
+        if page_number not in paginator.page_range:
+            raise BadRequest('Invalid page number')
+
+        self.page = paginator.page(page_number)
+        return self.page.object_list
+
     def serialize_list(self, data):
+
         """
         Given a collection of data (``objects`` or ``dicts``), serializes them.
 
@@ -397,6 +413,9 @@ class Resource(object):
         """
         if data is None:
             return ''
+
+        if getattr(self, 'paginate', False):
+            data = self.paginate_data(data)
 
         # Check for a ``Data``-like object. We should assume ``True`` (all
         # data gets prepared) unless it's explicitly marked as not.

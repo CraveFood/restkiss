@@ -61,12 +61,14 @@ class Resource(object):
             'POST': 'create',
             'PUT': 'update_list',
             'DELETE': 'delete_list',
+            'PATCH': 'patch_list',
         },
         'detail': {
             'GET': 'detail',
             'POST': 'create_detail',
             'PUT': 'update',
             'DELETE': 'delete',
+            'PATCH': 'patch',
         }
     }
     preparer = Preparer()
@@ -540,6 +542,22 @@ class Resource(object):
         :returns: ``None``
         """
         raise MethodNotImplemented()
+
+    def patch(self, *args, **kwargs):
+        """
+        Updates data for a PATCH on a detail-style endpoint.
+
+        Must receive a self.update_form_class
+
+        Adds fields not send in patch method and completes the
+        response to use a put method
+        """
+        form_items = self.update_form_class.base_fields.items()
+        fields = [key for key, value in form_items]
+        for field in fields:
+            if field not in self.data:
+                self.data[field] = getattr(self.instance, field)
+        return self.update(*args, **kwargs)
 
     # Uncommon methods the user should implement.
     # These have intentionally uglier method names, which reflects just how
